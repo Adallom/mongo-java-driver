@@ -16,11 +16,7 @@
 
 package com.mongodb;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 class MongosHAServerSelector implements ServerSelector {
     private ServerAddress stickTo;
@@ -41,22 +37,30 @@ class MongosHAServerSelector implements ServerSelector {
                     stickTo = null;
                     consideredServers.clear();
                 }
+
+                /*
+                * We don't want the fastest server rather a random one.
+                * This is due to when a single server is the fastest it will receive
+                * all the connections and choke. (This is fixed better in version 3).
                 ServerDescription fastestServer = null;
                 for (ServerDescription cur : clusterDescription.getAny()) {
                     if (fastestServer == null || cur.getAverageLatencyNanos() < fastestServer.getAverageLatencyNanos()) {
                         fastestServer = cur;
                     }
                 }
-                if (fastestServer != null) {
-                    stickTo = fastestServer.getAddress();
+                */
+                List<ServerDescription> availableServers = clusterDescription.getAny();
+                if (availableServers.size() > 0) {
+                    ServerDescription randomServer = availableServers.get(new Random().nextInt(availableServers.size()));
+                    stickTo = randomServer.getAddress();
                     consideredServers.addAll(okServers);
                 }
+
             }
             if (stickTo == null) {
                 return Collections.emptyList();
-            } else {
-                return Arrays.asList(clusterDescription.getByServerAddress(stickTo));
             }
+            return Arrays.asList(clusterDescription.getByServerAddress(stickTo));
         }
     }
 
