@@ -17,12 +17,12 @@
 package com.mongodb;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 class MongosHAServerSelector implements ServerSelector {
     private ServerAddress stickTo;
     private Set<ServerAddress> consideredServers = new HashSet<ServerAddress>();
 
-    @Override
     public List<ServerDescription> choose(final ClusterDescription clusterDescription) {
         if (clusterDescription.getConnectionMode() != ClusterConnectionMode.Multiple
             || clusterDescription.getType() != ClusterType.Sharded) {
@@ -51,7 +51,7 @@ class MongosHAServerSelector implements ServerSelector {
                 */
                 List<ServerDescription> availableServers = clusterDescription.getAny();
                 if (availableServers.size() > 0) {
-                    ServerDescription randomServer = availableServers.get(new Random().nextInt(availableServers.size()));
+                    ServerDescription randomServer = availableServers.get(ThreadLocalRandom.current().nextInt(availableServers.size()));
                     stickTo = randomServer.getAddress();
                     consideredServers.addAll(okServers);
                 }
